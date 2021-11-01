@@ -195,33 +195,7 @@ d3.csv("sankey.csv", function(error, data) {
 //         .text(function(d) {
 //     		return d.source.name + "  " + 
 //                 d.target.name + "\n" + format(d.value); });
- function createNodes(rawData) {
 
-var maxAmount = d3.max(rawData, function (d) { return +d.mig_ext_cost_total; });
-
-    var radiusScale = d3.scalePow()
-      .exponent(0.9)
-      .range([2, 85])
-      .domain([0, maxAmount]);
-
-    var myNodes = rawData.map(function (d) {
-      return {
-        id: d.id,
-        radius: radiusScale(+d.mig_ext_cost_total),
-        value: +d.mig_ext_cost_total,
-        name: d.mig_ext_medio,
-        // org: d.organization,
-        group: d.mig_ext_finance,
-        year: d.country,
-        x: Math.random() * 1800,
-        y: Math.random() * 1000
-      };
-    });
-
-    myNodes.sort(function (a, b) { return b.value - a.value; });
-
-    return myNodes;
-  }
 // add in the nodes
   var node = svg.append("g").selectAll(".node")
       .data(graph.nodes)

@@ -1,12 +1,46 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<title>SANKEY</title>
+<head>
+   <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Ashley Louie & Niko McGlashan">
+    <title>SANKEY</title>
+
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.typekit.net/eqc7jzl.css">
+
+    <!-- CAVEAT FONT REGULAR 400 and 600 SEMIBOLD-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    <link rel="stylesheet" type="text/css" href="./css/bubble_chart.css">
+
+    <!-- MAPBOX & DECKGL -->
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- MAPBOX CONFIG + SCROLLAMA -->
+ 
+
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="./css/style.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="./css/bubble_chart.css">
+  <script type="text/javascript" src="./src/jquery-3.6.0.min.js"></script>
+  <script src="./src/tooltip.js"></script>
+</head>
+
 <style>
 
 .node rect {
   cursor: move;
-  fill-opacity: .9;
-  shape-rendering: crispEdges;
+  fill-color: "#fff";
+/*   fill-opacity: .9; */
+  shape-rendering: roundEdges;
 }
 
 .node text {
@@ -24,24 +58,59 @@
   stroke-opacity: .7;
 }
 
+
+
 </style>
 <body>
 
 <p id="chart">
 
+ <!-- tooltip template -->
+    <div class="tooltip template">
+        <div class="side-color"></div>
+        <div class="row mb-3">
+            <div class="col">
+                <p>Cost to Migrate</p>
+                <h3 class="label-cost text-color">$8,500</h3>
+            </div>
+            <div class="col">
+                <p>Origin Country</p>
+                <span class="label-country text-label">El Salvador</span>
+            </div>
+        </div>
+        <p class="label-pathway text-color">Irregular Pathway on their Own or with a Caravan</p>
+    </div>
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="sankey.js"></script>
-<script>
-	
-var units = "Widgets";
 
-var margin = {top: 10, right: 10, bottom: 10, left: 160},
-    width = 700 - margin.left - margin.right,
-    height = 900 - margin.top - margin.bottom;
+<script>
+
+
+var tooltip = floatingTooltip('gates_tooltip');
+
+const countryText = {
+    "GTM": "Guatemala",
+    "HND": "Honduras",
+    "SLV": "El Salvador"
+};
+const pathwayAttr = {
+    "regular": {"label": "Regular Pathway", "color": "#e23cad"},
+    "irrregular coyote": {"label": "Irregular Pathway with a Smuggler", "color": "#3ba7c9"},
+    "irregular on own, with caravan": {"label": "Irregular Pathway on their Own or with a Caravan", "color": "#1540c4"}
+};
+
+var margin = {top: 10, right: 150, bottom: 10, left: 150},
+    width = 900 - margin.left - margin.right,
+    height = 800 - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),    // zero decimal places
-    format = function(d) { return formatNumber(d) + " " + units; },
+    format = function(d) { return formatNumber(d) + " " ; };
     color = d3.scale.category20();
+    
+  var fillColor = d3.scale.linear()
+    .domain(['low', 'medium', 'high'])
+    .range(['#3ba7c9', '#1540c4', '#e23cad']);
 
 // append the svg canvas to the page
 var svg = d3.select("#chart").append("svg")
@@ -101,33 +170,58 @@ d3.csv("sankey.csv", function(error, data) {
     .enter().append("path")
       .attr("class", "link")
       .attr("d", path)
-      .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+//       .style("stroke-width", function(d) { return Math.max(1, d.dy); })
       .sort(function(a, b) { return b.dy - a.dy; })
-      .on("mouseover", function(d) {
-  		d3.select(this).attr("r", 10).style("stroke", "#d11f63").style("stroke-width", 3)
-		}, function(d) {
-            d3.select(this).raise()
-        }) 
+        .on('mouseover', showDetail)
+      .on('mouseout', hideDetail);
+//       .on("mouseover", function(d) {
+//   		d3.select(this).style("stroke", function(l) {
+//         return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
+//       }).style("stroke-width", 3);
+// 		 
+//         })        
+// 		.on("mouseleave", function(d) {
+//   		d3.select(this).style("stroke", "#b3e7e8").style("stroke-width", 1)
+// 		;
+//         })
+//       .on('mouseover', showDetail)
+//       .on('mouseout', hideDetail);
 
-        
-		.on("mouseleave", function(d) {
-  		d3.select(this).attr("r", 5.5).style("stroke", "#b3e7e8").style("stroke-width", 1)
-		}, function(d) {
-            d3.select(this).moveToBack();
-        })
-// 		.on("mouseout", function(d) {
-//  		 d3.select(this).attr("r", 5.5).style("stroke", "#b3e7e8").moveToBack()
-//  		 
-// 		})
 		
 		
 
 // add the link titles
-  link.append("title")
-        .text(function(d) {
-    		return d.source.name + " → " + 
-                d.target.name + "\n" + format(d.value); });
+//   link.append("title")
+//         .text(function(d) {
+//     		return d.source.name + "  " + 
+//                 d.target.name + "\n" + format(d.value); });
+ function createNodes(rawData) {
 
+var maxAmount = d3.max(rawData, function (d) { return +d.mig_ext_cost_total; });
+
+    var radiusScale = d3.scalePow()
+      .exponent(0.9)
+      .range([2, 85])
+      .domain([0, maxAmount]);
+
+    var myNodes = rawData.map(function (d) {
+      return {
+        id: d.id,
+        radius: radiusScale(+d.mig_ext_cost_total),
+        value: +d.mig_ext_cost_total,
+        name: d.mig_ext_medio,
+        // org: d.organization,
+        group: d.mig_ext_finance,
+        year: d.country,
+        x: Math.random() * 1800,
+        y: Math.random() * 1000
+      };
+    });
+
+    myNodes.sort(function (a, b) { return b.value - a.value; });
+
+    return myNodes;
+  }
 // add in the nodes
   var node = svg.append("g").selectAll(".node")
       .data(graph.nodes)
@@ -135,53 +229,106 @@ d3.csv("sankey.csv", function(error, data) {
       .attr("class", "node")
       .attr("transform", function(d) { 
 		  return "translate(" + d.x + "," + d.y + ")"; })
-   //  .call(d3.behavior.drag()
-//       .origin(function(d) { return d; })
-//       .on("dragstart", function() { 
-// 		  this.parentNode.appendChild(this); })
-//       .on("drag", dragmove))
-
       .on("mouseover", function(d) {
     link
       .transition()
       .duration(300)
       .style("stroke", function(l) {
-        return l.source === d || l.target === d ? "#d11f63" : "#b3e7e8";
+        return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
       });
-  })
-  .on("mouseleave", function(d) {
-    link
-      .transition()
-      .duration(300)
-      .style("stroke", "#b3e7e8");
+//   })
+//   .on("mouseover", function(d) { 
+//   link
+//   .style("fill", function (d){
+// 		  return d.color = color(d.name.replace(/ .*/, "")); })
+// 		  })
+//   .on("mouseleave", function(d) {
+//     link
+//       .transition()
+//       .duration(300)
+//       .style("stroke", "#b3e7e8");
+// 
   });
+
+      
 
 // add the rectangles for the nodes
   node.append("rect")
       .attr("height", function(d) { return d.dy; })
       .attr("width", sankey.nodeWidth())
-      .style("fill", "#b3e7e8" )
-//       .style("stroke", "#fff")
-	.style("fill", function(d) { return d.color;}) 
-    .append("title")
-      .text(function(d) { 
-		  return d.name + "\n" + format(d.value); })
+     //  .style("fill", "#d11f63" )
+      .style("stroke", "#fff")
+	.style("fill", "#b3e7e8");
+	// function(d) { return d.color;}) 
+//     .append("title")
+     //  .text(function(d) { 
+// 		  return d.name + "\n" + format(d.value); })
+
+		  
   
 
 // add in the title for the nodes
   node.append("text")
-      .attr("x", -6)
+      .attr("x", 10)
       .attr("y", function(d) { return d; })
-      .attr("dy", ".35em")
-      .attr("text-anchor", "end")
+      .attr("dy", ".95em")
+      .attr("text-anchor", "start")
       .attr("transform", null)
       .text(function(d) { return d.name; })
       .style("fill", "black")
-      .style("font-size", "10px")
+      .style("font-size", "12px")
     .filter(function(d) { return d.x < width / 2; })
-      .attr("x", 6 + sankey.nodeWidth())
-      .attr("text-anchor", "start");
+      .attr("x", -10 + sankey.nodeWidth())
+      .attr("text-anchor", "end");
 
+function addCommas(nStr) {
+  nStr += '';
+  var x = nStr.split('.');
+  var x1 = x[0];
+  var x2 = x.length > 1 ? '.' + x[1] : '';
+  var rgx = /(\d+)(\d{3})/;
+  while (rgx.test(x1)) {
+    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+  }
+
+  return x1 + x2;
+}
+
+ function showDetail(d) {
+    // change outline to indicate hover state.
+    
+		d3.select(this).style("stroke", function(l) {
+        return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
+      }).style("stroke-width", 3);
+      
+
+      
+      
+
+    $("#gates_tooltip").empty();
+    const tooltipTemplate = $(".tooltip.template");
+    let tooltipContent = tooltipTemplate.clone();
+    let pathwayColor = pathwayAttr[d.name];
+
+    tooltipContent.find(".side-color").css("background", pathwayColor);
+    tooltipContent.find(".text-color").css("color", pathwayColor);
+    tooltipContent.find(".label-cost").html("$" + addCommas(d.value));
+    tooltipContent.find(".label-country").html(countryText[d.year]);
+    tooltipContent.find(".label-pathway").html(pathwayAttr[d.name]);
+
+    tooltipContent.children().appendTo("#gates_tooltip");
+
+    // tooltip.showTooltip(content, d3.event);
+    tooltip.showTooltip(d3.event);
+  } 
+
+  function hideDetail(d) {
+
+  		d3.select(this).style("stroke", "#b3e7e8").style("stroke-width", 1);
+  		
+
+    tooltip.hideTooltip();
+  }
 // the function for moving the nodes
 //   function dragmove(d) {
 //     d3.select(this).attr("transform", 
@@ -194,6 +341,6 @@ d3.csv("sankey.csv", function(error, data) {
 });
 
 </script>
-
+<script src="src/tooltip.js"></script>
 </body>
 </html>

@@ -99,6 +99,7 @@
     </div>
 
 <script src="./src/d3.v3.min.js"></script>
+
 <script src="sankey.js"></script>
 
 <script>
@@ -127,7 +128,7 @@ var margin = {top: 10, right: 150, bottom: 10, left: 150},
 
 var formatNumber = d3.format(",.0f"),    // zero decimal places
     format = function(d) { return formatNumber(d) + " " ; };
-    color = d3.scale.category20();
+    // color = d3.scale.category20();
     
 var fillColor = d3.scale.linear()
     .domain(['low', 'medium', 'high'])
@@ -212,6 +213,7 @@ d3.csv("sankey.csv", function(error, data) {
                 sourceColor = occuAttr[d.source.name.split('-')[1]].color
                 // select links with this class
                 d3.selectAll("." + sourceClass)
+                    // .raise()
                     .transition()
                     .duration(300)
                     // .style("stroke", function(l) {
@@ -225,8 +227,8 @@ d3.csv("sankey.csv", function(error, data) {
                     .style("fill", sourceColor);
             } // delete this line after filtering data
         })
-      .on('mouseout', function() {
-          hideDetail
+      .on('mouseout', function(d) {
+          hideDetail(d);
           link.transition()
             .duration(300)
             .style("stroke", "#b3e7e8");
@@ -275,6 +277,7 @@ d3.csv("sankey.csv", function(error, data) {
             });
         sourceClass = occuAttr[d.name.split('-')[1]].class;
         d3.selectAll("." + sourceClass)
+        // .raise()
         .transition()
         .duration(300)
         .style("stroke", function(l) {
@@ -394,11 +397,7 @@ function addCommas(nStr) {
     tooltip.showTooltip(d3.event);
   } 
 
-  function hideDetail(d) {
-
-  		d3.select(this).style("stroke", "#b3e7e8").style("stroke-width", 1);
-  		
-
+  function hideDetail(d) {  		
     tooltip.hideTooltip();
   }
 // the function for moving the nodes

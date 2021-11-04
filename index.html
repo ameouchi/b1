@@ -58,7 +58,14 @@
   stroke-opacity: .7;
 }
 
-
+.tooltip {
+    min-width: 330px;
+}
+.tooltip .line-divide {
+    height: 1px;
+    width: 100%;
+    background-color: #ccc;
+}
 
 </style>
 <body>
@@ -68,17 +75,27 @@
  <!-- tooltip template -->
     <div class="tooltip template">
         <div class="side-color"></div>
-        <div class="row mb-3">
+        <div class="row">
             <div class="col">
-                <p>Cost to Migrate</p>
-                <h3 class="label-cost text-color">$8,500</h3>
+                <p>Occupation Before Migration</p>
+                <span class="label-before text-color-before text-label">Agriculture</span>
             </div>
             <div class="col">
                 <p>Origin Country</p>
-                <span class="label-country text-label">El Salvador</span>
+                <span class="label-origin text-label">El Salvador</span>
             </div>
         </div>
-        <p class="label-pathway text-color">Irregular Pathway on their Own or with a Caravan</p>
+        <div class="line-divide mt-2 mb-2"></div>
+        <div class="row">
+            <div class="col">
+                <p>Occupation After Migration</p>
+                <span class="label-after text-color-after text-label">Informal Work</span>
+            </div>
+            <div class="col">
+                <p>Destination Country</p>
+                <span class="label-dest text-label">United States</span>
+            </div>
+        </div>
     </div>
 
 <script src="./src/d3.v3.min.js"></script>
@@ -94,10 +111,14 @@ const countryText = {
     "HND": "Honduras",
     "SLV": "El Salvador"
 };
-const pathwayAttr = {
-    "regular": {"label": "Regular Pathway", "color": "#e23cad"},
-    "irrregular coyote": {"label": "Irregular Pathway with a Smuggler", "color": "#3ba7c9"},
-    "irregular on own, with caravan": {"label": "Irregular Pathway on their Own or with a Caravan", "color": "#1540c4"}
+const occuAttr = {
+    "Agricultural production or labor": {"label": "Agriculture", "color": "#eb4927", "class": "agriculture"},
+    "Informal work": {"label": "Informal Work", "color": "#e03448", "class": "informal"},
+    "Salaried employment": {"label": "Salaried Work", "color": "#d11f63", "class": "salary"},
+    "Own business": {"label": "Own Business", "color": "#e23cad", "class": "business"},
+    "Domestic work": {"label": "Domestic Work", "color": "#bf0eb2", "class": "domestic"},
+    "Student (may or may not attend classes regularly)": {"label": "Student", "color": "#881da8", "class": "student"},
+    "Unemployed": {"label": "Unemployed", "color": "#662d91", "class": "unemployed"}
 };
 
 var margin = {top: 10, right: 150, bottom: 10, left: 150},
@@ -108,7 +129,7 @@ var formatNumber = d3.format(",.0f"),    // zero decimal places
     format = function(d) { return formatNumber(d) + " " ; };
     color = d3.scale.category20();
     
-  var fillColor = d3.scale.linear()
+var fillColor = d3.scale.linear()
     .domain(['low', 'medium', 'high'])
     .range(['#3ba7c9', '#1540c4', '#e23cad']);
 
@@ -139,7 +160,9 @@ d3.csv("sankey.csv", function(error, data) {
       graph.nodes.push({ "name": d.target });
       graph.links.push({ "source": d.source,
                          "target": d.target,
-                         "value": +d.value });
+                         "value": +d.value,
+                         "origin": d.country,
+                         "dest": d.mig_ext_country});
      });
 
      // return only the distinct / unique nodes
@@ -168,12 +191,50 @@ d3.csv("sankey.csv", function(error, data) {
   var link = svg.append("g").selectAll(".link")
       .data(graph.links)
     .enter().append("path")
-      .attr("class", "link")
+    //   .attr("class", "link")
+      .attr("class", d => {
+        if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this after filtering data
+            sourceClass = occuAttr[d.source.name.split('-')[1]].class;
+            return "link " + sourceClass;
+        } // delete this after filtering data
+        else { // delete this after filtering data
+            return "link"; // delete this after filtering data
+        } // delete this after filtering data
+      })
       .attr("d", path)
 //       .style("stroke-width", function(d) { return Math.max(1, d.dy); })
       .sort(function(a, b) { return b.dy - a.dy; })
-        .on('mouseover', showDetail)
-      .on('mouseout', hideDetail);
+        // .on('mouseover', showDetail)
+        .on('mouseover', d => {
+            showDetail;
+            if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this after filtering data
+                sourceClass = occuAttr[d.source.name.split('-')[1]].class;
+                sourceColor = occuAttr[d.source.name.split('-')[1]].color
+                // select links with this class
+                d3.selectAll("." + sourceClass)
+                    .transition()
+                    .duration(300)
+                    // .style("stroke", function(l) {
+                    //     return l.source.name === d.source.name ? color(d.source.name.replace(/ .*/, "")) : "#b3e7e8";
+                    // });
+                    .style("stroke", sourceColor);
+                // select nodes with this class
+                d3.selectAll(".source-" + sourceClass)
+                    .transition()
+                    .duration(300)
+                    .style("fill", sourceColor);
+            } // delete after filtering data
+        })
+      .on('mouseout', function() {
+          hideDetail
+          link.transition()
+            .duration(300)
+            .style("stroke", "#b3e7e8");
+          node.select("rect")
+            .transition()
+            .duration(300)
+            .style("fill", "#b3e7e8");
+        });
 //       .on("mouseover", function(d) {
 //   		d3.select(this).style("stroke", function(l) {
 //         return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
@@ -204,30 +265,59 @@ d3.csv("sankey.csv", function(error, data) {
       .attr("transform", function(d) { 
 		  return "translate(" + d.x + "," + d.y + ")"; })
       .on("mouseover", function(d) {
-    link
-      .transition()
-      .duration(300)
-      .style("stroke", function(l) {
-        return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
-      });
-//   })
+          d3.select(this)
+            .select("rect")
+            .transition()
+            .duration(300)
+            .style("fill", d => {
+                return (d.name.startsWith('-')) ? occuAttr[d.name.split('-')[1]].color
+                : "#b3e7e8"
+            });
+        sourceClass = occuAttr[d.name.split('-')[1]].class;
+        d3.selectAll("." + sourceClass)
+        .transition()
+        .duration(300)
+        .style("stroke", function(l) {
+            // return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
+            return l.source === d  ? occuAttr[d.name.split('-')[1]].color : "#b3e7e8";
+        });
+      })
 //   .on("mouseover", function(d) { 
 //   link
 //   .style("fill", function (d){
 // 		  return d.color = color(d.name.replace(/ .*/, "")); })
 // 		  })
-//   .on("mouseleave", function(d) {
-//     link
-//       .transition()
-//       .duration(300)
-//       .style("stroke", "#b3e7e8");
-// 
+  .on("mouseleave", function(d) {
+      d3.select(this)
+        .selectAll("rect")
+        .transition()
+        .duration(300)
+        .style("fill", "#b3e7e8")
+    link
+      .transition()
+      .duration(300)
+      .style("stroke", "#b3e7e8");
   });
 
       
 
 // add the rectangles for the nodes
   node.append("rect")
+      .attr("class", d => {
+        if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this after filtering data
+            if (d.name.startsWith('-')) {
+                sourceClass = occuAttr[d.name.split('-')[1]].class;
+                return "node source-" + sourceClass;
+            }
+            else {
+                sourceClass = occuAttr[d.name].class;
+                return "node target-" + sourceClass;
+            }
+        } // delete this after filtering data
+        else { // delete this after filtering data
+            return "node"; // delete this after filtering data
+        } // delete this after filtering data
+      })
       .attr("height", function(d) { return d.dy; })
       .attr("width", sankey.nodeWidth())
      //  .style("fill", "#d11f63" )
@@ -244,11 +334,26 @@ d3.csv("sankey.csv", function(error, data) {
 // add in the title for the nodes
   node.append("text")
       .attr("x", 10)
-      .attr("y", function(d) { return d; })
+      .attr("y", 0)
       .attr("dy", ".95em")
       .attr("text-anchor", "start")
       .attr("transform", null)
-      .text(function(d) { return d.name; })
+    //   .text(function(d) { return d.name;})
+    // uncomment the below code after occupation data is filtered out 
+    // text labels with dictionary lookup
+      .text(function(d) { 
+          if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this after filtering data
+            if (d.name.startsWith('-')) {
+                return occuAttr[d.name.split('-')[1]].label;
+            }
+            else {
+                return occuAttr[d.name].label; 
+            }
+          } // delete this after filtering data
+          else { // delete this after filtering data
+              return d.name; // delete this after filtering data
+          }; // delete this after filtering data
+        })
       .style("fill", "black")
       .style("font-size", "12px")
     .filter(function(d) { return d.x < width / 2; })
@@ -282,13 +387,16 @@ function addCommas(nStr) {
     $("#gates_tooltip").empty();
     const tooltipTemplate = $(".tooltip.template");
     let tooltipContent = tooltipTemplate.clone();
-    let pathwayColor = pathwayAttr[d.name];
+    let beforeColor = occuAttr[d.source.name.split('-')[1]].color;
+    let afterColor = occuAttr[d.target.name].color;
 
-    tooltipContent.find(".side-color").css("background", pathwayColor);
-    tooltipContent.find(".text-color").css("color", pathwayColor);
-    tooltipContent.find(".label-cost").html("$" + addCommas(d.value));
-    tooltipContent.find(".label-country").html(countryText[d.year]);
-    tooltipContent.find(".label-pathway").html(pathwayAttr[d.name]);
+    tooltipContent.find(".side-color").css("background", "linear-gradient(" + beforeColor + ", " + afterColor + ")");
+    tooltipContent.find(".text-color-before").css("color", beforeColor);
+    tooltipContent.find(".text-color-after").css("color", afterColor);
+    tooltipContent.find(".label-before").html(occuAttr[d.source.name.split('-')[1]].label);
+    tooltipContent.find(".label-after").html(occuAttr[d.target.name].label);
+    tooltipContent.find(".label-origin").html(countryText[d.origin]);
+    tooltipContent.find(".label-dest").html(d.dest);
 
     tooltipContent.children().appendTo("#gates_tooltip");
 

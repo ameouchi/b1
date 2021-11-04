@@ -206,7 +206,7 @@ d3.csv("sankey.csv", function(error, data) {
       .sort(function(a, b) { return b.dy - a.dy; })
         // .on('mouseover', showDetail)
         .on('mouseover', d => {
-            showDetail;
+            showDetail(d);
             if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this line after filtering data
                 sourceClass = occuAttr[d.source.name.split('-')[1]].class;
                 sourceColor = occuAttr[d.source.name.split('-')[1]].color
@@ -374,16 +374,6 @@ function addCommas(nStr) {
 }
 
  function showDetail(d) {
-    // change outline to indicate hover state.
-    
-		d3.select(this).style("stroke", function(l) {
-        return l.source === d  ? color(d.name.replace(/ .*/, "")) : "#b3e7e8";
-      }).style("stroke-width", 3);
-      
-
-      
-      
-
     $("#gates_tooltip").empty();
     const tooltipTemplate = $(".tooltip.template");
     let tooltipContent = tooltipTemplate.clone();

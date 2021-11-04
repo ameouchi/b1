@@ -193,13 +193,13 @@ d3.csv("sankey.csv", function(error, data) {
     .enter().append("path")
     //   .attr("class", "link")
       .attr("class", d => {
-        if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this after filtering data
+        if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this line after filtering data
             sourceClass = occuAttr[d.source.name.split('-')[1]].class;
             return "link " + sourceClass;
-        } // delete this after filtering data
-        else { // delete this after filtering data
-            return "link"; // delete this after filtering data
-        } // delete this after filtering data
+        } // delete this line after filtering data
+        else { // delete this line after filtering data
+            return "link"; // delete this line after filtering data
+        } // delete this line after filtering data
       })
       .attr("d", path)
 //       .style("stroke-width", function(d) { return Math.max(1, d.dy); })
@@ -207,7 +207,7 @@ d3.csv("sankey.csv", function(error, data) {
         // .on('mouseover', showDetail)
         .on('mouseover', d => {
             showDetail;
-            if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this after filtering data
+            if (!d.source.name.endsWith("Does not apply") && !d.source.name.endsWith("No Response") && !d.source.name.endsWith("Other") && !d.source.name.endsWith("Retired") && !d.source.name.endsWith("Unpaid home care")) { // delete this line after filtering data
                 sourceClass = occuAttr[d.source.name.split('-')[1]].class;
                 sourceColor = occuAttr[d.source.name.split('-')[1]].color
                 // select links with this class
@@ -223,7 +223,7 @@ d3.csv("sankey.csv", function(error, data) {
                     .transition()
                     .duration(300)
                     .style("fill", sourceColor);
-            } // delete after filtering data
+            } // delete this line after filtering data
         })
       .on('mouseout', function() {
           hideDetail
@@ -304,7 +304,7 @@ d3.csv("sankey.csv", function(error, data) {
 // add the rectangles for the nodes
   node.append("rect")
       .attr("class", d => {
-        if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this after filtering data
+        if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this line after filtering data
             if (d.name.startsWith('-')) {
                 sourceClass = occuAttr[d.name.split('-')[1]].class;
                 return "node source-" + sourceClass;
@@ -313,10 +313,10 @@ d3.csv("sankey.csv", function(error, data) {
                 sourceClass = occuAttr[d.name].class;
                 return "node target-" + sourceClass;
             }
-        } // delete this after filtering data
-        else { // delete this after filtering data
-            return "node"; // delete this after filtering data
-        } // delete this after filtering data
+        } // delete this line after filtering data
+        else { // delete this line after filtering data
+            return "node"; // delete this line after filtering data
+        } // delete this line after filtering data
       })
       .attr("height", function(d) { return d.dy; })
       .attr("width", sankey.nodeWidth())
@@ -342,17 +342,17 @@ d3.csv("sankey.csv", function(error, data) {
     // uncomment the below code after occupation data is filtered out 
     // text labels with dictionary lookup
       .text(function(d) { 
-          if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this after filtering data
+          if (!d.name.endsWith("Does not apply") && !d.name.endsWith("No Response") && !d.name.endsWith("Other") && !d.name.endsWith("Retired") && !d.name.endsWith("Unpaid home care")) { // delete this line after filtering data
             if (d.name.startsWith('-')) {
                 return occuAttr[d.name.split('-')[1]].label;
             }
             else {
                 return occuAttr[d.name].label; 
             }
-          } // delete this after filtering data
-          else { // delete this after filtering data
-              return d.name; // delete this after filtering data
-          }; // delete this after filtering data
+          } // delete this line after filtering data
+          else { // delete this line after filtering data
+              return d.name; // delete this line after filtering data
+          }; // delete this line after filtering data
         })
       .style("fill", "black")
       .style("font-size", "12px")
